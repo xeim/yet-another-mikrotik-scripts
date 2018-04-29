@@ -1,0 +1,20 @@
+:log info "backup beginning now"
+
+:local emailInfo "info@exapmple.com"
+:local date  [/system clock get date] 
+:local day   [ :pick $date 4 6 ]
+:local month [ :pick $date 0 3 ]
+:local year  [ :pick $date 7 11 ]
+#:log info "date format : $day $month $year"
+
+:local backupfile ([/system resource get board-name] . "_" . [/system routerboard get serial-number] . "_$year_$month_$day")
+/system backup save name="$backupfile.backup"
+/export file="$backupfile.rsc"
+:delay 1m
+
+:log info "backup being emailed"
+/tool e-mail send to=$emailInfo  subject=([/system identity get name] . " Backup") file="$backupfile.backup,$backupfile.rsc"
+:delay 1m
+
+/file remove "$backupfile.backup,$backupfile.rsc"
+:log info "backup finished"
