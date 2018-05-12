@@ -5,15 +5,15 @@ binmode(STDOUT,':utf8');
 
 use Data::Dumper;
 use Encode;
+use Sys::Syslog;
 use DateTime;
 use DateTime::Format::Mail;
 use LWP::UserAgent;
 use JSON;
 use MIME::Entity;
 use Email::Sender::Simple qw(sendmail);
-use Email::Sender::Transport::SMTP::TLS;
 
-my $modem      = 'ip.ip.ip.ip';
+my $modem      = '192.168.99.1';
 my $phone      = '+7916NNNNNNN';
 my $emailInfo  = 'info@example.com';
 my $sms_list   = "http://$modem/goform/goform_get_cmd_process?isTest=false&cmd=sms_data_total&page=0&data_per_page=500&mem_store=1&tags=10&order_by=order+by+id+desc";
@@ -24,6 +24,8 @@ my $req_list = HTTP::Request->new(GET => $sms_list);
 my $resp = $ua->request($req_list);
 my $body = $resp->decoded_content;
 my $json = decode_json $body;
+exit if !scalar @{$json->{messages}};
+
 my $sms = $json->{messages}->[-1];
 $sms->{text} = decode('UCS-2', pack 'H*', $sms->{content});
 my ($year, $month, $day, $hour, $minute, $second) = split ',', $sms->{'date'};
@@ -36,6 +38,10 @@ $sms->{datetime} = DateTime->new(
     second    => $second
 );
 
+openlog('sms_to_email.pl', 'pid');
+syslog('info', 'New SMS in modem %s from %s found', $modem, $sms->{number});
+closelog();
+
 my $email = MIME::Entity->build(
     Type     => 'text/plain',
     Encoding => 'quoted-printable',
@@ -46,15 +52,7 @@ my $email = MIME::Entity->build(
     Subject  => encode('MIME-Header', "[SMS]"),
     Data     => encode('UTF-8', $sms->{text})
 );
-
-my $transport = Email::Sender::Transport::SMTP::TLS->new(
-    host     => 'smtp.gmail.com',
-    port     => 587,
-    username => $emailInfo,
-    password => 'password',
-    helo     => 'example.com'
-);
-sendmail($email, { transport => $transport });
+sendmail($email);
 
 $resp = $ua->post(
     $sms_delete,
