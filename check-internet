@@ -1,0 +1,21 @@
+:local interfaces [:toarray value="ether6,ether7,lte1,pptp-out1"]
+:local emailInfo  "somebody@example.com";
+
+:foreach interface in=$interfaces do={
+    :local state
+    :local provider
+    :local stateID [/interface detect-internet state find name=$interface ]
+    if ([:len $stateID] != 0) do={
+        :local interfaceID [/interface find name=$interface ]
+        :set state    [/interface detect-internet state get $stateID value-name=state]
+        :set provider [/interface get $interfaceID value-name=comment]
+	} else={
+	    :set state    "state not found";
+	    :set provider "unknown";
+	}
+
+    :if ( $state != "wan" ) do={
+        /log warning message="Interface $interface ($provider) internet $state"
+        /tool e-mail send to=$emailInfo subject="Interface $interface ($provider) internet $state"
+    }
+}
