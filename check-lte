@@ -1,0 +1,13 @@
+# based on https://vasilevkirill.com/MikroTik/4/
+
+:local checkip "192.168.99.1";
+:local emailInfo "somebody@example.com
+:local TimePowerReset 5;
+
+:if ([/ping address=$checkip count=3] = 0) do={
+    /log warning message="LTE fail $checkip"
+    /tool e-mail send to=$emailInfo subject=([/system identity get name] . " LTE fail $checkip")
+    /system routerboard usb power-reset duration=$TimePowerReset
+} else={
+    # /log warning message="Test LTE Internet success $ipp"
+}
