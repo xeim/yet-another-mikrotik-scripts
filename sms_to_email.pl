@@ -24,10 +24,11 @@ my $req_list = HTTP::Request->new(GET => $sms_list);
 my $resp = $ua->request($req_list);
 my $body = $resp->decoded_content;
 my $json = decode_json $body;
-exit if !scalar @{$json->{messages}};
+exit if !scalar @{ $json->{messages} };
 
 my $sms = $json->{messages}->[-1];
-$sms->{text} = decode('UCS-2', pack 'H*', $sms->{content});
+exit if !$sms->{received_all_concat_sms};
+$sms->{text} = encode('UTF-8', decode('UCS-2', pack 'H*', $sms->{content}) );
 my ($year, $month, $day, $hour, $minute, $second) = split ',', $sms->{'date'};
 $sms->{datetime} = DateTime->new(
     year      => 2000 + $year,
@@ -47,10 +48,10 @@ my $email = MIME::Entity->build(
     Encoding => 'quoted-printable',
     Charset  => 'UTF-8',
     Date     => DateTime::Format::Mail->format_datetime( $sms->{datetime} ),
-    To       => encode('MIME-Header', "$phone <$emailInfo>"),
-    From     => encode('MIME-Header', "$sms->{number} <$emailInfo>"),
-    Subject  => encode('MIME-Header', "[SMS]"),
-    Data     => encode('UTF-8', $sms->{text})
+    To       => encode('MIME-Header', $phone) . " <$emailInfo>",
+    From     => encode('MIME-Header', $sms->{number}) . " <$emailInfo>",
+    Subject  => encode('MIME-Header', '[SMS]'),
+    Data     => $sms->{text}
 );
 sendmail($email);
 
