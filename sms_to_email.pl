@@ -16,6 +16,7 @@ use Email::Sender::Simple qw(sendmail);
 my $modem      = '192.168.99.1';
 my $phone      = '+7916NNNNNNN';
 my $emailInfo  = 'info@example.com';
+my $timeZone   = 'UTC';
 my $sms_list   = "http://$modem/goform/goform_get_cmd_process?isTest=false&cmd=sms_data_total&page=0&data_per_page=500&mem_store=1&tags=10&order_by=order+by+id+desc";
 my $sms_delete = "http://$modem/goform/goform_set_cmd_process";
 
@@ -36,7 +37,8 @@ $sms->{datetime} = DateTime->new(
     day       => $day,
     hour      => $hour,
     minute    => $minute,
-    second    => $second
+    second    => $second,
+    time_zone => $timeZone,
 );
 
 openlog('sms_to_email.pl', 'pid');
@@ -48,7 +50,7 @@ my $email = MIME::Entity->build(
     Encoding => 'quoted-printable',
     Charset  => 'UTF-8',
     Date     => DateTime::Format::Mail->format_datetime( $sms->{datetime} ),
-    To       => encode('MIME-Header', $phone) . " <$emailInfo>",
+    To       => encode('MIME-Header', $phone        ) . " <$emailInfo>",
     From     => encode('MIME-Header', $sms->{number}) . " <$emailInfo>",
     Subject  => encode('MIME-Header', '[SMS]'),
     Data     => $sms->{text}
@@ -64,5 +66,3 @@ $resp = $ua->post(
         notCallback => 'true'
     }
 );
-
-#die Dumper($email, $sms);
