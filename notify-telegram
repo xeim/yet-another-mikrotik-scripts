@@ -1,0 +1,25 @@
+# send Telegram message from any Mikrotik script
+# usage example (you can use markdown syntax):
+# :global message "Never stop *learning*!";
+#	/system script run notify-telegram;
+
+:global message;
+# check if $message variable is empty
+:if ([:len $message] = 0) do={
+	:set $message ("*" . [/system resource get board-name] . "* (" . [/system routerboard get serial-number] . "): empty message");
+}
+
+# you need bot_id and your chat_id with bot
+# https://core.telegram.org/bots#3-how-do-i-create-a-bot
+:local bot "botNNNNNNNNN:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX;
+:local chat "NNNNNNNNN";
+
+# for russian users - don't forget route "api.telegram.org" to VPN
+# #DigitalResistance, #fuckRKN
+/tool fetch                                        \
+	mode=https http-method=post keep-result=no       \
+	url="https://api.telegram.org/$bot/sendMessage"  \
+	http-data="chat_id=$chat&parse_mode=markdown&text=$message";
+
+# clean $message for next run because it is a global variable 
+:set $message;
