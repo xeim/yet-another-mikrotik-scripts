@@ -1,0 +1,22 @@
+:local who ""; :local device;
+
+# somebody
+:if ($leaseActMAC = "XX:XX:XX:XX:XX:XX") do={ set who "Somebody"; set device "Samsung Galaxy A3 2016" }
+# repeat for anybody
+
+:if ($who != "" and $leaseBound = 1) do={
+	:beep frequency=600 length=165ms; :delay 165ms;
+	:beep frequency=50  length=83ms ; :delay 83ms ;
+	:beep frequency=600 length=165ms; :delay 165ms;
+	:beep frequency=50  length=83ms ; :delay 83ms ;
+	:beep frequency=650 length=165ms; :delay 165ms;
+	:beep frequency=600 length=165ms; :delay 165ms;
+	:beep frequency=50  length=83ms ; :delay 83ms ;
+	:beep frequency=600 length=165ms; :delay 165ms;
+	:beep frequency=700 length=275ms; :delay 275ms;
+	:beep frequency=800 length=275ms; :delay 275ms;
+	:beep frequency=900 length=110ms; :delay 110ms;
+
+	:global message "Net: *$who* ($device) connected";
+	/system script run Notify_Telegram
+}
