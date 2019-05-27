@@ -18,6 +18,7 @@ curl \
     --request POST \
     --form chat_id=$CHAT \
     --form photo=@$PIC \
+    --output /dev/null \
     --silent \
     https://api.telegram.org/$BOT/sendPhoto
 
