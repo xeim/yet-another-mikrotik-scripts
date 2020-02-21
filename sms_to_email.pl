@@ -6,6 +6,7 @@ use strict;
 use utf8;
 binmode(STDOUT,':utf8');
 
+use Data::Dumper;
 use Encode;
 use Sys::Syslog;
 use DateTime;
@@ -23,6 +24,9 @@ my $timeZone   = 'UTC';
 my $sms_list   = "http://$modem/goform/goform_get_cmd_process?isTest=false&cmd=sms_data_total&page=0&data_per_page=500&mem_store=1&tags=10&order_by=order+by+id+desc";
 my $sms_delete = "http://$modem/goform/goform_set_cmd_process";
 my $tmpfile    = '/tmp/sms_sZFNfR2eOH';
+my $bot        = 'botNNNNNNNNN:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';
+my $telegram   = "https://api.telegram.org/$bot/sendMessage";
+my $chat       = 'NNNNNNNNN';
 
 my $ua = LWP::UserAgent->new;
 my $req_list = HTTP::Request->new(GET => $sms_list);
@@ -61,6 +65,14 @@ openlog('sms_to_email.pl', 'pid');
 syslog('info', 'New SMS in modem %s from %s found', $modem, $sms->{number});
 closelog();
 
+$ua->post(
+    $telegram, {
+        chat_id    => $chat,
+        parse_mode => 'markdown',
+        text       => 'New message from **' . $sms->{number} . '**',
+    }
+);
+
 my $email = MIME::Entity->build(
     Type     => 'text/plain',
     Encoding => 'quoted-printable',
@@ -74,11 +86,12 @@ my $email = MIME::Entity->build(
 sendmail($email);
 
 $resp = $ua->post(
-    $sms_delete,
-    {
+    $sms_delete, {
         isTest      => 'false',
         goformId    => 'DELETE_SMS',
         msg_id      => "$sms->{id};",
         notCallback => 'true',
     }
 );
+
+#die Dumper($email, $sms);
