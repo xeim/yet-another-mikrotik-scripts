@@ -31,6 +31,7 @@ my $chat       = 'NNNNNNNNN';
 my $ua = LWP::UserAgent->new;
 my $req_list = HTTP::Request->new(GET => $sms_list);
 my $resp = $ua->request($req_list);
+exit if $resp->code != 200;
 my $body = $resp->decoded_content;
 my $json = decode_json $body;
 exit if !scalar @{ $json->{messages} };
@@ -69,7 +70,7 @@ $ua->post(
     $telegram, {
         chat_id    => $chat,
         parse_mode => 'markdown',
-        text       => 'New message from **' . $sms->{number} . '**',
+        text       => 'New message from *' . $sms->{number} . '*',
     }
 );
 
