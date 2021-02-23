@@ -33,6 +33,7 @@ my $req_list = HTTP::Request->new(GET => $sms_list);
 my $resp = $ua->request($req_list);
 exit if $resp->code != 200;
 my $body = $resp->decoded_content;
+$body =~ s/[\x11]+/ /g;
 my $json = decode_json $body;
 exit if !scalar @{ $json->{messages} };
 my $sms = $json->{messages}->[-1];
