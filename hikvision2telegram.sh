@@ -1,26 +1,20 @@
 #!/bin/sh
 
-# get picture from hikvision camera
-CAMERA="ip.ip.ip.ip"
-USER="some_user"
-PASS="some_pass"
-PIC=`tempfile -p campic`
-curl \
-    --digest --user $USER:$PASS \
-    --output $PIC \
-    --silent \
-    http://$CAMERA/Streaming/channels/101/picture
+CAMERA=rtsp://...
+DURATION=20
+RECORD=`mktemp --dry-run record-XXXXXXXXXX.mp4`
+ffmpeg -t $DURATION -loglevel fatal -i $CAMERA -vcodec copy $RECORD
 
-# send picture to Telegram chat
+
 BOT="botNNNNNNNNN:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 CHAT="NNNNNNNNN"
 curl \
     --request POST \
     --form chat_id=$CHAT \
-    --form photo=@$PIC \
+    --form video=@$RECORD \
+    --form disable_notification=true \
     --output /dev/null \
     --silent \
-    https://api.telegram.org/$BOT/sendPhoto
+    https://api.telegram.org/$BOT/sendVideo
 
-# remove picture
-rm $PIC
+rm $RECORD 2>/dev/null
