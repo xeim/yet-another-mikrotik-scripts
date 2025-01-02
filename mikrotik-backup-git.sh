@@ -5,9 +5,8 @@ DIFFFILE=/tmp/mikrotik_diff.txt
 MAILTO=somebody@example.com
 
 # get text backups from devices
-ssh -p 5022 backup@192.168.219.11 export > $GITDIR/router.rsc
-ssh         backup@192.168.219.14 export > $GITDIR/wifi.rsc
-ssh         backup@192.168.219.31 export > $GITDIR/schelkovo.rsc
+ssh -p 5022 backup@192.168.219.11 export show-sensitive > $GITDIR/router.rsc
+ssh         backup@192.168.219.14 export show-sensitive > $GITDIR/wifi.rsc
 
 # remove date from first line
 sed -i "1 s/\# .\+ by/\# by/" $GITDIR/*.rsc
